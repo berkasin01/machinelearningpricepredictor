@@ -1,35 +1,42 @@
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
+from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 data = pd.read_csv("AMD.csv")
-no_date_data = data.drop("Date", axis=1)
+clean_data = data[["Open", "Close", "Adj Close", "Volume"]]
 
-data_pick = "Open"
-X = no_date_data.drop(data_pick, axis=1)
-y = no_date_data[data_pick]
+#regular linear regression model
+# X = clean_data.iloc[:, 1:].values
+# y = clean_data.iloc[:, 0].values
+# X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, random_state=14)
+# reg_mod = LinearRegression()
+# reg_mod.fit(X_train, y_train)
+#
+# get_close = X_train[:, 0]
+#
+# plt.scatter(get_close, y_train, color="red")
+# plt.plot(get_close, reg_mod.predict(X_train), color="blue")
+# plt.show(block=True)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, train_size=0.8, test_size=0.2, random_state=10)
+X = np.array(clean_data.Close)
+y = np.array(clean_data.Open)
+X = X.reshape(-1, 1)
+y = y.reshape(-1, 1)
 
-reg_obj = LinearRegression()
 
-reg_obj.fit(X_train, y_train)
+print(y)
 
-y_predict = reg_obj.predict(X_test)
 
-mse = mean_squared_error(y_test, y_predict)
+poly_reg = PolynomialFeatures(degree=10)
+X_poly = poly_reg.fit_transform(X)
 
-predict_values = reg_obj.predict(X_train)
-residuals = (predict_values - y_train)
+poly_model = LinearRegression()
+poly_model.fit(X_poly, y)
 
-obj_mse = reg_obj.score(X_train, y_train)
-
-df = pd.DataFrame({"Actual": y_test, "Predicted": y_predict})
-
-print(df)
-fig = sns.scatterplot(x='Actual', y='Predicted', data=df)
-plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red', linestyle='--')
+plt.scatter(X, y, color="red")
+plt.plot(X, poly_model.predict(X_poly))
 plt.show(block=True)
